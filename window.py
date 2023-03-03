@@ -20,6 +20,9 @@ class Window:
         self.browser_window_notebook = Gtk.Notebook()
         self.browser_window.add(self.browser_window_notebook)
 
+        # Allow scrolling if too many tabs
+        self.browser_window_notebook.set_scrollable(True)
+
 
     def add_tab_to_notebook(self):
         '''
