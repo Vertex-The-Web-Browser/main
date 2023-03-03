@@ -19,6 +19,7 @@ class Tab:
         self.tab_grid = Gtk.Grid()
         self.session_history = SessionHistory()
         self.rendering_box = WebKit2.WebView()
+
         
         # Creates back button, and registers back() event handler which is invoked when it is clicked
         self.back_button = Gtk.Button.new_with_label("Back")
@@ -27,6 +28,10 @@ class Tab:
         # Creates forward button, and registers forward() event handler which is invoked when it is clicked
         self.forward_button = Gtk.Button.new_with_label("Forward")
         self.forward_button.connect("clicked", self.forward)
+
+        #Creates refresh button
+        self.refresh_button= Gtk.Button.new_with_label("Refresh")
+        self.refresh_button.connect("clicked", lambda x: self.rendering_box.reload())
 
         # Creates address bar, and registers search event handler which is invoked when enter is pressed
         self.address_bar = Gtk.Entry()
@@ -40,9 +45,11 @@ class Tab:
         # Adds aforementioned buttons and address bar to the display grid
         self.tab_grid.add(self.back_button)
         self.tab_grid.add(self.forward_button)
+        self.tab_grid.add(self.refresh_button)
+
         self.tab_grid.add(self.address_bar)
         self.tab_grid.add(self.search_button)
-
+        
         self.rendering_box.set_hexpand(True)
         self.rendering_box.set_vexpand(True)
 
