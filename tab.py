@@ -10,6 +10,7 @@ from history import SessionHistory
 import pandas as pd
 import sqlite3
 import os
+from urllib.parse import quote
 
 class Tab:
 
@@ -91,9 +92,9 @@ class Tab:
         if(validators.url(search_text)): 
             self.rendering_box.load_uri(search_text)
         else:
-            self.rendering_box.load_uri("https://www.google.com/search?q=" + search_text.replace(" ", "+"))
+            self.rendering_box.load_uri("https://www.google.com/search?q=" + quote(search_text.replace(" ", "+"),safe="!~*'()"))
             # TODO: implement proper google querying, perhaps using https://stackoverflow.com/questions/6431061/python-encoding-characters-with-urllib-quote
-
+            # DONE
     
     def back(self, widget):
         '''
