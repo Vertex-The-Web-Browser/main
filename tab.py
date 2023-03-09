@@ -9,6 +9,7 @@ from gi.repository import WebKit2
 from history import SessionHistory
 import pandas as pd
 import sqlite3
+import os
 
 class Tab:
 
@@ -75,7 +76,7 @@ class Tab:
             conn = sqlite3.connect('database.db')
             cur = conn.cursor()
 
-            cur.execute("SELECT uri,timestamp FROM history")
+            cur.execute("SELECT uri,timestamp FROM history ORDER BY timestamp DESC")
             data = cur.fetchall()
 
             df = pd.DataFrame(data,columns=['uri','timestamp'])
@@ -83,7 +84,7 @@ class Tab:
 
             with open("history.html","w") as f:
                 f.write(html)
-            self.rendering_box.load_uri("file:///home/harshit/code/IEEE/vertex-browser/main/history.html")
+            self.rendering_box.load_uri("file://"+os.getcwd()+"/history.html")
             return
         elif(not search_text.startswith("https://") and validators.url("https://"+search_text)):
             search_text = "https://"+search_text
@@ -126,7 +127,9 @@ class Tab:
 
     
     def update_address_bar(self, address):
+        
         self.address_bar.set_text(address)
+
 
 
     def update_tab_title(self, title):
@@ -145,13 +148,19 @@ class Tab:
         uri = current_webview_object.get_uri()
 
         if load_event_type == WebKit2.LoadEvent.STARTED:
-            self.update_address_bar(uri)
-            self.update_tab_title(uri)
+            if ('history.html' in uri):
+                self.update_address_bar("history")
+            else:
+                self.update_address_bar(uri)
+                self.update_tab_title(uri)
 
         elif load_event_type == WebKit2.LoadEvent.COMMITTED:
             self.add_uri_to_history(uri)
 
         elif load_event_type == WebKit2.LoadEvent.FINISHED:
-            self.update_tab_title(current_webview_object.get_title())
+            if ('history.html' in uri):
+                self.update_tab_title("history")
+            else:
+                self.update_tab_title(current_webview_object.get_title())
             
                 
