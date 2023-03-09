@@ -7,7 +7,8 @@ from gi.repository import Gtk
 from gi.repository import WebKit2
 
 from history import SessionHistory
-
+import pandas as pd
+import sqlite3
 
 class Tab:
 
@@ -70,7 +71,22 @@ class Tab:
         '''
 
         search_text = self.address_bar.get_text()
-    
+        if(search_text == "vertex::history"):
+            conn = sqlite3.connect('database.db')
+            cur = conn.cursor()
+
+            cur.execute("SELECT uri,timestamp FROM history")
+            data = cur.fetchall()
+
+            df = pd.DataFrame(data,columns=['uri','timestamp'])
+            html = df.to_html()
+
+            with open("history.html","w") as f:
+                f.write(html)
+            self.rendering_box.load_uri("file:///home/harshit/code/IEEE/vertex-browser/main/history.html")
+            return
+        elif(not search_text.startswith("https://") and validators.url("https://"+search_text)):
+            search_text = "https://"+search_text
         if(validators.url(search_text)): 
             self.rendering_box.load_uri(search_text)
         else:

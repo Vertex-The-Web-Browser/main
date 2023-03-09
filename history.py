@@ -1,3 +1,5 @@
+import sqlite3
+
 class SessionHistory:
     '''
     Class to keep track of session history, used for implementing forward and
@@ -6,14 +8,16 @@ class SessionHistory:
     Contains function add_uri to add a uri to history, function prev_uri which returns previous
     page, and function next_uri which returns next page.
     '''
-
-
+    con = sqlite3.connect('database.db')
+    cur = con.cursor()
     def __init__(self):
         '''
         Initialises an empty list for session history
         '''
         self.history = []
         self.history_ptr = -1
+        SessionHistory.cur.execute("CREATE TABLE IF NOT EXISTS history(id integer primary key autoincrement, uri varchar(2000), timestamp datetime default CURRENT_TIMESTAMP);")
+        SessionHistory.con.commit()
 
 
     def add_uri(self, uri):
@@ -28,7 +32,8 @@ class SessionHistory:
 
         self.history.append(uri)
         self.history_ptr += 1
-
+        SessionHistory.cur.execute("INSERT INTO history(uri) VALUES(?)",(uri,))
+        SessionHistory.con.commit()
 
     def curr_uri(self):
         '''
@@ -64,4 +69,4 @@ class SessionHistory:
             return None
 
         self.history_ptr += 1
-        return self.history[self.history_ptr]  
+        return self.history[self.history_ptr] 
