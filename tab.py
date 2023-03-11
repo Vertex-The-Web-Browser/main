@@ -11,7 +11,7 @@ from history import SessionHistory
 
 class Tab:
 
-    def __init__(self, notebook):
+    def __init__(self, tab_label):
         '''
         Intialises a tab, including a webview rendering engine,
         search bar, search button and back button
@@ -53,8 +53,8 @@ class Tab:
         self.rendering_box.set_hexpand(True)
         self.rendering_box.set_vexpand(True)
 
-        # Registers url_requested() as event handler for page load events
-        self.rendering_box.connect('load-changed', self.url_requested)
+        # Registers url_load_handler() as event handler for page load events
+        self.rendering_box.connect('load-changed', self.url_load_handler)
 
         # Puts webview object into the grid 
         self.tab_grid.attach_next_to(self.rendering_box, self.address_bar, Gtk.PositionType.BOTTOM, 100, 100)
@@ -62,8 +62,12 @@ class Tab:
         # Loads default search engine
         self.rendering_box.load_uri('https://www.google.com')
 
-        # Appends this tab to the passed notebook 
-        notebook.append_page(self.tab_grid)
+        self.tab_label = tab_label
+
+    
+    def get_container(self):
+        # Returns the gui container of the tab
+        return self.tab_grid
 
 
     def search(self, widget):
@@ -102,15 +106,41 @@ class Tab:
         if uri is not None:
             self.rendering_box.load_uri(uri)
 
-    
-    def url_requested(self, current_webview_object, load_event_type):
+
+    def add_uri_to_history(self, uri):
         '''
-        Function called when a new page is loaded. Adds the page to session history if
-        it is not already at the top of the stack (to prevent issues with refresh).
+        Function to add uri to tab history
         '''
 
-        if load_event_type == WebKit2.LoadEvent.COMMITTED:
-            uri = current_webview_object.get_uri()
-            if self.session_history.curr_uri() != uri:
-                self.session_history.add_uri(uri)
+        if self.session_history.curr_uri() != uri:
+            self.session_history.add_uri(uri)
+
+    
+    def update_address_bar(self, address):
+        self.address_bar.set_text(address)
+
+
+    def update_tab_title(self, title):
+        self.tab_label.set_label(title)
+
+    
+    def url_load_handler(self, current_webview_object, load_event_type):
+        '''
+        Function called when a page load event occurs. 
+        If a page has started loading, sets the address bar and tab title to url.
+        If page has finished loading, sets tab title to title of html page.
+        Adds the page to session history if load is committed, and
+        it is not already at the top of the stack (to prevent issues with refresh).
+        '''
                 
+        uri = current_webview_object.get_uri()
+
+        if load_event_type == WebKit2.LoadEvent.STARTED:
+            self.update_address_bar(uri)
+            self.update_tab_title(uri)
+
+        elif load_event_type == WebKit2.LoadEvent.COMMITTED:
+            self.add_uri_to_history(uri)
+
+        elif load_event_type == WebKit2.LoadEvent.FINISHED:
+            self.update_tab_title(current_webview_object.get_title())
