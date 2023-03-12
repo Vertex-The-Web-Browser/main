@@ -31,6 +31,14 @@ class Tab:
         self.forward_button = Gtk.Button.new_with_label("Forward")
         self.forward_button.connect("clicked", self.forward)
 
+        #Creates refresh button, and registers forward() event handler which is invoked when it is clicked
+        self.refresh_button= Gtk.Button.new_with_label("Refresh")
+        self.refresh_button.connect("clicked", lambda x: self.rendering_box.reload())
+
+        #Creates history button, and registers forward() event handler which is invoked when it is clicked
+        self.history_button = Gtk.Button.new_with_label("History")
+        self.history_button.connect("clicked", self.history)
+
         # Creates address bar, and registers search event handler which is invoked when enter is pressed
         self.address_bar = Gtk.Entry()
         self.address_bar.set_hexpand(True)
@@ -43,8 +51,10 @@ class Tab:
         # Adds aforementioned buttons and address bar to the display grid
         self.tab_grid.add(self.back_button)
         self.tab_grid.add(self.forward_button)
+        self.tab_grid.add(self.refresh_button)
         self.tab_grid.add(self.address_bar)
         self.tab_grid.add(self.search_button)
+        self.tab_grid.add(self.history_button)
 
         self.rendering_box.set_hexpand(True)
         self.rendering_box.set_vexpand(True)
@@ -93,7 +103,7 @@ class Tab:
             self.rendering_box.load_uri(search_text)
         else:
             self.rendering_box.load_uri("https://www.google.com/search?q=" + quote(search_text.replace(" ", "+"),safe="!~*'()"))
-            # TODO: implement proper google querying, perhaps using https://stackoverflow.com/questions/6431061/python-encoding-characters-with-urllib-quote
+            ## TODO: implement proper google querying, perhaps using https://stackoverflow.com/questions/6431061/python-encoding-characters-with-urllib-quote
             # DONE
     
     def back(self, widget):
@@ -116,6 +126,22 @@ class Tab:
         uri = self.session_history.next_uri()
         if uri is not None:
             self.rendering_box.load_uri(uri)
+    
+    def history(self, widget):
+        conn = sqlite3.connect('database.db')
+        cur = conn.cursor()
+
+        cur.execute("SELECT uri,timestamp FROM history ORDER BY timestamp DESC")
+        data = cur.fetchall()
+
+        df = pd.DataFrame(data,columns=['uri','timestamp'])
+        html = df.to_html()
+
+        with open("history.html","w") as f:
+            f.write(html)
+        self.rendering_box.load_uri("file://"+os.getcwd()+"/history.html")
+        return
+
 
 
     def add_uri_to_history(self, uri):
