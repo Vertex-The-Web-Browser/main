@@ -2,7 +2,6 @@ import gi
 import validators
 import sqlite3
 import  os
-import pandas as pd
 
 
 
@@ -102,12 +101,14 @@ class Tab:
 
         if(validators.url(search_text)): 
             self.rendering_box.load_uri(search_text)
+            #Redirecting to bookmarks page
         elif(search_text == "vertex::bookmark"):
             conn = sqlite3.connect('bookmarks.db')
             cur = conn.cursor()
 
             cur.execute("SELECT * FROM bookmark_table")
             data = cur.fetchall()
+            # Generating html page 
    
             html = "<table border='1' style='width:100%;'>"
             html += "<tr><th>ID</th><th>URI</th></tr>"
