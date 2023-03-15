@@ -1,5 +1,10 @@
 import gi
 import validators
+import sqlite3
+import  os
+import pandas as pd
+
+
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("WebKit2", "4.0")
@@ -21,7 +26,7 @@ class Tab:
         self.rendering_box = WebKit2.WebView()
         
         # Creates back button, and registers back() event handler which is invoked when it is clicked
-        self.back_button = Gtk.Button.new_with_label("Back")
+        self.back_button = Gtk.Button.new_with_label("Back button ")
         self.back_button.connect("clicked", self.back)
 
         # Creates forward button, and registers forward() event handler which is invoked when it is clicked
@@ -33,15 +38,37 @@ class Tab:
         self.address_bar.set_hexpand(True)
         self.address_bar.connect("activate", self.search)
 
+
+
+        con = sqlite3.connect('bookmarks.db')
+        cur = con.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS bookmark_table(id integer primary key autoincrement, uri varchar(2000))")
+        con.commit()
+        con.close()
+
+
+        self.bookmark_button = Gtk.Button.new_from_icon_name("bookmark-new-symbolic", Gtk.IconSize.BUTTON)
+        self.bookmark_button.connect("clicked", self.bookmark)
+
+      
+
+
         # Creates search button, and registers search event handler which is invoked when button is pressed
         self.search_button = Gtk.Button.new_with_label("Search")
         self.search_button.connect("clicked", self.search)
+
+
+
+      
+
 
         # Adds aforementioned buttons and address bar to the display grid
         self.tab_grid.add(self.back_button)
         self.tab_grid.add(self.forward_button)
         self.tab_grid.add(self.address_bar)
         self.tab_grid.add(self.search_button)
+        self.tab_grid.add(self.bookmark_button)
+
 
         self.rendering_box.set_hexpand(True)
         self.rendering_box.set_vexpand(True)
@@ -69,12 +96,37 @@ class Tab:
         If entered text is a valid url, load it, otherwise load google search results for it
         '''
 
+      
+
         search_text = self.address_bar.get_text()
-    
+
         if(validators.url(search_text)): 
             self.rendering_box.load_uri(search_text)
+        elif(search_text == "vertex::bookmark"):
+            conn = sqlite3.connect('bookmarks.db')
+            cur = conn.cursor()
+
+            cur.execute("SELECT * FROM bookmark_table")
+            data = cur.fetchall()
+   
+            html = "<table border='1' style='width:100%;'>"
+            html += "<tr><th>ID</th><th>URI</th></tr>"
+            for row in data:
+               html += "<tr><td>" + str(row[0]) + "</td><td>" + row[1] + "</td></tr>"
+            html += "</table>"
+
+
+
+
+            with open("bookmarks.html","w") as f:
+             f.write(html)
+
+            self.rendering_box.load_uri("file://"+os.getcwd()+"/bookmarks.html")
         else:
-            self.rendering_box.load_uri("https://www.google.com/search?q=" + search_text.replace(" ", "+"))
+             self.rendering_box.load_uri("https://www.google.com/search?q=" + search_text.replace(" ", "+"))  
+  
+
+
             # TODO: implement proper google querying, perhaps using https://stackoverflow.com/questions/6431061/python-encoding-characters-with-urllib-quote
 
     
@@ -115,8 +167,34 @@ class Tab:
 
     def update_tab_title(self, title):
         self.tab_label.set_label(title)
+        
 
     
+    def bookmark(self, widget):
+        '''
+        Function called by bookmark button to add current URI to bookmarks database.
+        '''
+
+        conn = sqlite3.connect('bookmarks.db')
+        c = conn.cursor()
+
+        uri = self.rendering_box.get_uri()
+
+        # Check if bookmark already exists
+        c.execute('SELECT * FROM bookmark_table WHERE uri=?', (uri,))
+        bookmark = c.fetchone()
+
+        if bookmark is None:
+            # Add bookmark to database
+            c.execute('INSERT INTO bookmark_table (uri) VALUES (?)', (uri,))
+            conn.commit()
+
+        conn.close()        
+
+
+
+
+
     def url_load_handler(self, current_webview_object, load_event_type):
         '''
         Function called when a page load event occurs. 
