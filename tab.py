@@ -89,10 +89,39 @@ class Tab:
 
             cur.execute("SELECT uri,timestamp FROM history ORDER BY timestamp DESC")
             data = cur.fetchall()
-
-            df = pd.DataFrame(data,columns=['uri','timestamp'])
-            html = df.to_html()
-
+            
+            table_content = ""
+            for row in data:
+                table_content+= f'<tr><td class="uri"><a href="{row[0]}">{row[0]}</a></td><td>{row[1]}</td></tr>'
+            html = f'''
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>History</title>
+            <script src="script.js" defer></script>
+            <link rel="stylesheet" href="style.css">
+            </head>
+            <body>
+            <div class="table-container">
+            <input type="text" id="search" placeholder="Search...">
+                <table id="table">
+                <thead>
+                    <tr>
+                    <th>URI</th>
+                    <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_content}
+                </tbody>
+                </table>
+            </div>
+            </body>
+            </html>
+            '''
             with open("history.html","w") as f:
                 f.write(html)
             self.rendering_box.load_uri("file://"+os.getcwd()+"/history.html")
@@ -134,8 +163,38 @@ class Tab:
         cur.execute("SELECT uri,timestamp FROM history ORDER BY timestamp DESC")
         data = cur.fetchall()
 
-        df = pd.DataFrame(data,columns=['uri','timestamp'])
-        html = df.to_html()
+        table_content = ""
+        for row in data:
+            table_content+= f'<tr><td class="uri"><a href="{row[0]}">{row[0]}</a></td><td>{row[1]}</td></tr>'
+        html = f'''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>History</title>
+        <script src="script.js" defer></script>
+        <link rel="stylesheet" href="style.css">
+        </head>
+        <body>
+        <div class="table-container">
+        <input type="text" id="search" placeholder="Search...">
+            <table id="table">
+            <thead>
+                <tr>
+                <th>URI</th>
+                <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {table_content}
+            </tbody>
+            </table>
+        </div>
+        </body>
+        </html>
+        '''
 
         with open("history.html","w") as f:
             f.write(html)
