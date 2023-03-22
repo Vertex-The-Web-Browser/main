@@ -244,9 +244,6 @@ class Tab:
             self.add_uri_to_history(uri)
 
         elif load_event_type == WebKit2.LoadEvent.FINISHED:
-            if ('history.html' in uri):
-                self.update_tab_title("history")
-            else:
-                self.update_tab_title(current_webview_object.get_title())
+            self.update_tab_title(current_webview_object.get_title())
             
                 
