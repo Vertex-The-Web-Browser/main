@@ -1,5 +1,6 @@
 import gi
 import validators
+from urllib.parse import quote
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("WebKit2", "4.0")
@@ -77,11 +78,14 @@ class Tab:
         '''
 
         search_text = self.address_bar.get_text()
+
+        if not search_text.startswith("https://") and validators.url("https://"+search_text):
+            search_text = "https://"+search_text
     
         if(validators.url(search_text)): 
             self.rendering_box.load_uri(search_text)
         else:
-            self.rendering_box.load_uri("https://www.google.com/search?q=" + search_text.replace(" ", "+"))
+            self.rendering_box.load_uri("https://www.google.com/search?q=" + quote(search_text, safe= "!~*'()"))
             # TODO: implement proper google querying, perhaps using https://stackoverflow.com/questions/6431061/python-encoding-characters-with-urllib-quote
 
     
@@ -137,10 +141,11 @@ class Tab:
 
         if load_event_type == WebKit2.LoadEvent.STARTED:
             self.update_address_bar(uri)
-            self.update_tab_title(uri)
 
         elif load_event_type == WebKit2.LoadEvent.COMMITTED:
             self.add_uri_to_history(uri)
+            self.update_tab_title(uri)
+            self.update_address_bar(uri)
 
         elif load_event_type == WebKit2.LoadEvent.FINISHED:
             self.update_tab_title(current_webview_object.get_title())
